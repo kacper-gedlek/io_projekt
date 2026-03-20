@@ -5,3 +5,4 @@ Lista plików ignorowanych przez:
 2. VSC: [VSC.gitignore](https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore)
 3. Venv: [Venv_1.gitignore](https://github.com/github/gitignore/blob/main/Qt.gitignore) <-- Pytanie czy wirtualne środowisko zostanie użyte dla flask
 4. Venv: [Venv_2.gitignore](https://github.com/github/gitignore/blob/main/Global/VirtualEnv.gitignore)
+5. Qt: [Qt.gitignore](https://github.com/github/gitignore/blob/main/Qt.gitignore) <-- Pytanie czy Qt  zostanie użyte
