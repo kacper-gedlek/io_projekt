@@ -53,5 +53,10 @@ result.xml
 # Pylint dirs/files
 .pylint.d/
 
+# env files
+.env
+__pycache__/
+*.pyc
+
 # Ignore setuptools development files in the PyLS subrepo
 external-deps/python-lsp-server/.installation-dir/
