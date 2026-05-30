@@ -58,5 +58,48 @@ result.xml
 __pycache__/
 *.pyc
 
+# Databases and DataGrip
+*.sql
+.idea/
+
+# Tools and IDEs (Fleet, VS Code, Zed, Eclipse)
+.flatpak-builder/
+.settings/
+.classpath
+.project
+.tool-versions
+build/
+*.iml
+*.ipr
+*.iws
+
+.fleet/
+!.fleet/*.json
+
+.vscode/
+!.vscode/*.json
+
+.zed/
+!.zed/*.json
+
+# System files and logs
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# Archives and environment configuration
+.env
+*.tar
+*.tgz
+*.zip
+
 # Ignore setuptools development files in the PyLS subrepo
 external-deps/python-lsp-server/.installation-dir/
+
+# Default ignored files by DataGrip
+/shelf/
+/workspace.xml
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml

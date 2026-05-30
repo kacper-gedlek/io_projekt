@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, Column, String, BigInteger, Boolean
+from sqlalchemy import create_engine, Column, String, BigInteger, Boolean, Integer
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -34,3 +34,10 @@ class User(Base):
     suspended = Column(Boolean)
     lastaccess = Column(BigInteger)
     department = Column(String(200))
+    
+class Course(Base):
+    __tablename__ = "mdl_course"
+    
+    id = Column(Integer, primary_key=True)
+    fullname = Column(String(254))
+    shortname = Column(String(255))
