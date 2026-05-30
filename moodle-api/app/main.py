@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 import time
+from datetime import datetime
 
 from app.database import get_db
 from app.config import settings
@@ -60,13 +61,51 @@ class CourseResponse(BaseModel):
 
 class SessionResponse(BaseModel):
     id: int
-    sessdate: int
-    duration: int
+    sessdate: int          # surowy Unix timestamp (kompatybilność wsteczna)
+    duration: int          # surowy czas trwania w sekundach (kompatybilność wsteczna)
     description: str
     attendance_name: str
+    # Czytelne pola dla frontendu
+    date: str              # np. "2025-05-30"
+    time_start: str        # np. "18:00"
+    time_end: str          # np. "19:30"
+    duration_label: str    # np. "1h 30min"
+    label: str             # np. "Piątek, 30.05.2025 · 18:00–19:30"
 
     class Config:
         from_attributes = True
+
+
+def _build_session_response(row) -> SessionResponse:
+    """Przetwarza wiersz z bazy na SessionResponse z czytelnymi polami daty/czasu."""
+    dt_start = datetime.fromtimestamp(row.sessdate)
+    dt_end = datetime.fromtimestamp(row.sessdate + row.duration)
+
+    total_minutes = row.duration // 60
+    hours = total_minutes // 60
+    minutes = total_minutes % 60
+    if hours > 0 and minutes > 0:
+        duration_label = f"{hours}h {minutes}min"
+    elif hours > 0:
+        duration_label = f"{hours}h"
+    else:
+        duration_label = f"{minutes}min"
+
+    day_names = ["Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota", "Niedziela"]
+    day_name = day_names[dt_start.weekday()]
+
+    return SessionResponse(
+        id=row.id,
+        sessdate=row.sessdate,
+        duration=row.duration,
+        description=row.description,
+        attendance_name=row.attendance_name,
+        date=dt_start.strftime("%Y-%m-%d"),
+        time_start=dt_start.strftime("%H:%M"),
+        time_end=dt_end.strftime("%H:%M"),
+        duration_label=duration_label,
+        label=f"{day_name}, {dt_start.strftime('%d.%m.%Y')} · {dt_start.strftime('%H:%M')}–{dt_end.strftime('%H:%M')}",
+    )
 
 class AttendanceRegisterRequest(BaseModel):
     session_id: int
@@ -137,7 +176,7 @@ def get_lecturer_courses(card_uid: str, db: Session = Depends(get_db)):
 def get_course_sessions(course_id: int, db: Session = Depends(get_db)):
     """Pobiera sesje obecności (zajęcia) dla wybranego kursu."""
     sessions = crud.get_course_sessions(db, course_id)
-    return sessions
+    return [_build_session_response(s) for s in sessions]
 
 
 @app.post(
