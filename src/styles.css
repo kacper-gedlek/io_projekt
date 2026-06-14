@@ -1,0 +1,426 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #111827;
+  background: #eef2f7;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: #d8dee9;
+  --green: #16a34a;
+  --blue: #2749d8;
+  --card: rgba(255, 255, 255, 0.97);
+  --shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { width: 100%; min-height: 100%; }
+body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
+button { font: inherit; }
+
+.page-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.06), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.06), transparent 30%),
+    #edf2f7;
+}
+
+.device-frame {
+  position: relative;
+  width: min(1008px, calc(100vw - 16px));
+  height: min(584px, calc(100vh - 16px));
+  padding: 18px 22px;
+  border: 3px solid rgba(15, 23, 42, 0.82);
+  border-radius: 34px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,252,0.94));
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.menu-btn {
+  position: absolute;
+  z-index: 20;
+  left: 26px;
+  top: 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--ink);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+  cursor: pointer;
+  padding: 10px 16px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.menu-btn__label { text-transform: uppercase; }
+.menu-btn__icon,
+.menu-btn__icon::before,
+.menu-btn__icon::after {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--ink);
+  border-radius: 999px;
+  content: "";
+}
+.menu-btn__icon { position: relative; }
+.menu-btn__icon::before { position: absolute; top: -6px; left: 0; }
+.menu-btn__icon::after { position: absolute; top: 6px; left: 0; }
+
+.dashboard-layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 238px minmax(0, 1fr) 248px;
+  grid-template-rows: 132px 1fr;
+  column-gap: 18px;
+  row-gap: 12px;
+  height: 100%;
+  padding-top: 8px;
+}
+
+.logo-panel {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  height: 100%;
+  padding-top: 14px;
+}
+
+.logo-panel__image {
+  width: 212px;
+  height: auto;
+  object-fit: contain;
+}
+
+.top-controls {
+  grid-column: 3;
+  grid-row: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 10px;
+  z-index: 5;
+  align-self: start;
+}
+
+.date-label {
+  align-self: flex-end;
+  color: var(--green);
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, 0.10);
+}
+
+.clock-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px 10px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+}
+.clock-card__time { font-size: 20px; letter-spacing: 0.04em; }
+
+.clock-face {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border: 3px solid var(--ink);
+  border-radius: 50%;
+  background: #fff;
+}
+.clock-face__tick {
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 2px;
+  height: 9px;
+  background: var(--ink);
+  border-radius: 999px;
+  transform-origin: 50% 26px;
+  opacity: 0.42;
+}
+.clock-face__tick:nth-child(3n) { height: 12px; opacity: 0.7; }
+.clock-face__hand {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  transform-origin: bottom center;
+  border-radius: 999px;
+}
+.clock-face__hand--hour { width: 5px; height: 17px; background: var(--ink); }
+.clock-face__hand--minute { width: 3px; height: 22px; background: var(--ink); }
+.clock-face__hand--second { width: 2px; height: 25px; background: #ef4444; }
+.clock-face__center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ink);
+  transform: translate(-50%, -50%);
+}
+
+.lesson-card,
+.communication-box {
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: var(--card);
+}
+
+.lesson-card {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  height: 100%;
+  min-height: 0;
+  align-self: stretch;
+  justify-self: center;
+  width: 100%;
+  max-width: 100%;
+  padding: 18px 24px 20px;
+}
+
+.lesson-card__badge {
+  width: fit-content;
+  margin: 0 auto 14px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  color: #3152d8;
+  background: rgba(49, 82, 216, 0.08);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.lesson-card__room {
+  margin: 0;
+  font-size: clamp(34px, 5.6vw, 60px);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+.lesson-card__subject {
+  max-width: 96%;
+  margin: 8px 0 18px;
+  font-size: clamp(18px, 2.6vw, 31px);
+  line-height: 1.04;
+  font-weight: 780;
+  color: #22324a;
+  letter-spacing: -0.03em;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.18fr 0.92fr;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+.info-box {
+  min-width: 0;
+  padding: 12px 13px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid #e7edf4;
+}
+.info-box__label {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.info-box__value {
+  margin: 8px 0 0;
+  font-size: 17px;
+  font-weight: 760;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+.info-box--wide .info-box__value { font-size: 16px; }
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+  font-size: 16px;
+  font-weight: 850;
+}
+.status-pill::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.communication-box {
+  grid-column: 3;
+  grid-row: 2;
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
+  justify-self: stretch;
+  width: 100%;
+  padding: 20px;
+  border-color: rgba(22, 163, 74, 0.34);
+}
+.communication-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--green);
+  font-size: 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.communication-header__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.12);
+}
+.communication-box__text {
+  margin: 42px 0 0;
+  font-size: 22px;
+  line-height: 1.24;
+  font-weight: 760;
+  color: var(--ink);
+}
+
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.32);
+  backdrop-filter: blur(5px);
+}
+.role-menu {
+  position: relative;
+  width: min(540px, 94vw);
+  padding: 24px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18);
+}
+.menu-eyebrow {
+  margin: 0 0 8px;
+  color: #3152d8;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.role-menu h2 { margin: 0 0 16px; font-size: clamp(22px, 4vw, 34px); letter-spacing: -0.03em; }
+.close-btn {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f5f9;
+  cursor: pointer;
+  font-size: 24px;
+}
+.role-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.role-card {
+  text-align: left;
+  min-height: 128px;
+  padding: 18px;
+  border: 1px solid #dbe2ea;
+  border-radius: 18px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.role-card:hover,
+.role-card--active {
+  transform: translateY(-2px);
+  border-color: #3152d8;
+  box-shadow: 0 10px 20px rgba(49, 82, 216, 0.08);
+  background: #fff;
+}
+.role-card strong { display: block; margin-bottom: 8px; font-size: 20px; }
+.role-card small { color: var(--muted); font-size: 14px; line-height: 1.35; }
+
+@media (max-width: 1024px), (max-height: 620px) {
+  .device-frame {
+    width: calc(100vw - 12px);
+    height: calc(100vh - 12px);
+    padding: 18px;
+  }
+  .menu-btn { top: 20px; left: 22px; }
+  .dashboard-layout {
+    grid-template-columns: 210px minmax(0, 1fr) 225px;
+    grid-template-rows: 126px 1fr;
+    gap: 12px 14px;
+    padding-top: 8px;
+  }
+  .logo-panel { grid-row: 2; padding-top: 22px; align-items: center; }
+  .logo-panel__image { width: 192px; }
+  .top-controls { grid-column: 3; grid-row: 1; gap: 8px; align-items: flex-end; }
+  .date-label { font-size: 14px; padding: 8px 12px; }
+  .clock-card { padding: 9px 13px 9px 9px; }
+  .clock-face { width: 54px; height: 54px; }
+  .clock-card__time { font-size: 18px; }
+  .lesson-card { padding: 18px 20px 18px; }
+  .lesson-card__room { font-size: clamp(32px, 5vw, 56px); }
+  .lesson-card__subject { font-size: clamp(18px, 2.45vw, 27px); margin-bottom: 14px; }
+  .info-grid { gap: 9px; margin-bottom: 14px; }
+  .info-box { padding: 11px; }
+  .info-box__value { font-size: 16px; }
+  .info-box--wide .info-box__value { font-size: 15px; }
+  .communication-box { grid-row: 2; height: auto; padding: 20px; align-self: stretch; }
+  .communication-box__text { margin-top: 38px; font-size: 21px; }
+}
+
+@media (max-width: 860px) {
+  body { overflow: auto; }
+  .page-shell { place-items: stretch; padding: 6px; }
+  .device-frame { width: 100%; height: auto; min-height: calc(100vh - 12px); overflow-y: auto; }
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    height: auto;
+    padding-top: 60px;
+  }
+  .logo-panel,
+  .lesson-card,
+  .communication-box,
+  .top-controls { grid-column: 1; }
+  .logo-panel { grid-row: 1; justify-content: flex-start; padding-top: 0; height: auto; margin-bottom: 8px; }
+  .logo-panel__image { width: 140px; }
+  .top-controls { grid-row: 2; position: static; justify-content: flex-start; flex-wrap: wrap; margin-bottom: 10px; }
+  .lesson-card { grid-row: 3; }
+  .communication-box { grid-row: 4; min-height: 240px; height: auto; align-self: stretch; }
+  .info-grid,
+  .role-grid { grid-template-columns: 1fr; }
+}
