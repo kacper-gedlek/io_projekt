@@ -249,10 +249,12 @@ button { font: inherit; }
 }
 .info-box__value {
   margin: 8px 0 0;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 760;
   line-height: 1.12;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: none;
 }
 .info-box--wide .info-box__value { font-size: 16px; }
 
@@ -310,7 +312,54 @@ button { font: inherit; }
   font-weight: 760;
   color: var(--ink);
 }
+.menu-status {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-weight: 700;
+  line-height: 1.35;
+}
 
+.session-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  max-height: 310px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.session-card {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #e7edf4;
+  border-radius: 18px;
+  background: #f8fafc;
+  padding: 13px 15px;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+}
+
+.session-card:hover {
+  border-color: rgba(39, 73, 216, 0.45);
+  background: rgba(39, 73, 216, 0.06);
+}
+
+.session-card strong {
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.session-card small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.session-card span {
+  color: #2749d8;
+  font-weight: 800;
+  font-size: 14px;
+}
 .menu-overlay {
   position: fixed;
   inset: 0;
