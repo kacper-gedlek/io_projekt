@@ -512,9 +512,12 @@ def select_teacher_session(payload: dict = Body(...)):
             status_code=404,
             detail="Nie znaleziono wybranych zajęć."
         )
-
-    lecturer_user = check_user_by_card(lecturer_uid)
-    lecturer_name = get_user_full_name(lecturer_user) or "Prowadzący"
+    try:
+        lecturer_user = check_user_by_card(lecturer_uid)
+        lecturer_name = get_user_full_name(lecturer_user) or "Prowadzący"
+    except HTTPException:
+        lecturer_user = None
+        lecturer_name = "Prowadzący"
 
     selected_context = {
         "lecturer_uid": lecturer_uid,
@@ -561,7 +564,6 @@ def scan_rfid(uid: str):
 
     if teacher_auth.get("active"):
         try:
-            user = check_user_by_card(normalized_uid)
             courses, sessions = build_sessions_for_lecturer(normalized_uid)
 
             if not courses:
@@ -569,13 +571,18 @@ def scan_rfid(uid: str):
                     "active": False,
                     "status": "rejected",
                     "uid": normalized_uid,
-                    "user": user,
+                    "user": None,
                     "courses": [],
                     "sessions": [],
                     "started_at": teacher_auth.get("started_at"),
                 }
 
                 return teacher_auth
+
+            try:
+                user = check_user_by_card(normalized_uid)
+            except HTTPException:
+                user = None
 
             teacher_auth = {
                 "active": True,
@@ -602,12 +609,28 @@ def scan_rfid(uid: str):
 
             return teacher_auth
 
+    if has_active_class() and is_session_finished(selected_context.get("session")):
+        clear_selected_context()
+
+        last_scan = {
+            "uid": normalized_uid,
+            "user": None,
+            "status": "class_finished",
+            "message": "Zajęcia zostały zakończone. Sala wolna.",
+            "scanned_at": now,
+            "attendance": None,
+            "session_id": None,
+            "course_id": None,
+        }
+
+        return last_scan
+
     if not has_active_class():
         last_scan = {
             "uid": normalized_uid,
             "user": None,
             "status": "no_active_class",
-            "message": "Brak aktywnych zajęć.",
+            "message": "Brak aktywnych zajęć. Poproś prowadzącego o rozpoczęcie zajęć.",
             "scanned_at": now,
             "attendance": None,
             "session_id": None,
