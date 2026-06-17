@@ -1,4 +1,5 @@
 import time
+from datetime import datetime, date
 from sqlalchemy.orm import Session
 from app.models import (
     MoodleUser,
@@ -32,9 +33,19 @@ def get_lecturer_courses(db: Session, lecturer_id: int):
         .all()
     )
 
-def get_course_sessions(db: Session, course_id: int):
-    """Pobiera wszystkie sesje obecności (z wtyczki attendance) powiązane z danym kursem."""
-    return (
+def get_course_sessions(db: Session, course_id: int, filter_date=None):
+    """
+    Pobiera sesje obecności dla danego kursu.
+
+    - filter_date=None (domyślnie) → tylko dzisiejsze sesje
+    - filter_date=date(...)        → sesje z konkretnego dnia
+    - filter_date="all"            → wszystkie sesje bez filtra (historia)
+    """
+    # Domyślnie filtruj po dzisiejszej dacie
+    if filter_date is None:
+        filter_date = date.today()
+
+    query = (
         db.query(
             MoodleAttendanceSession.id,
             MoodleAttendanceSession.sessdate,
@@ -44,9 +55,20 @@ def get_course_sessions(db: Session, course_id: int):
         )
         .join(MoodleAttendance, MoodleAttendance.id == MoodleAttendanceSession.attendanceid)
         .filter(MoodleAttendance.course == course_id)
-        .order_by(MoodleAttendanceSession.sessdate.desc())
-        .all()
+        .order_by(MoodleAttendanceSession.sessdate.asc())
     )
+
+    # "all" = wyłącz filtr daty (pobierz cały semestr)
+    if filter_date != "all":
+        day_start = int(datetime.combine(filter_date, datetime.min.time()).timestamp())
+        day_end   = int(datetime.combine(filter_date, datetime.max.time()).timestamp())
+        query = query.filter(
+            MoodleAttendanceSession.sessdate.between(day_start, day_end)
+        )
+
+    return query.all()
+
+
 
 def register_student_attendance(db: Session, session_id: int, student_id: int, taken_by_id: int = None):
     """

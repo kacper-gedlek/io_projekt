@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 import time
-from datetime import datetime
+from datetime import datetime, date as DateType
 
 from app.database import get_db
 from app.config import settings
@@ -173,9 +173,35 @@ def get_lecturer_courses(card_uid: str, db: Session = Depends(get_db)):
     response_model=List[SessionResponse],
     dependencies=[Depends(verify_api_key)]
 )
-def get_course_sessions(course_id: int, db: Session = Depends(get_db)):
-    """Pobiera sesje obecności (zajęcia) dla wybranego kursu."""
-    sessions = crud.get_course_sessions(db, course_id)
+def get_course_sessions(
+    course_id: int,
+    db: Session = Depends(get_db),
+    date: Optional[str] = None  # format: "YYYY-MM-DD" lub "all" żeby pobrać wszystkie
+):
+    """
+    Pobiera sesje obecności dla wybranego kursu.
+
+    - **Domyślnie** (bez parametru `date`): zwraca tylko dzisiejsze sesje.
+    - `?date=2025-05-30` — sesje z konkretnego dnia.
+    - `?date=all` — wszystkie sesje (historia całego semestru).
+    """
+    filter_date: Optional[DateType] = None  # None = domyślny filtr (dziś) w crud
+
+    if date is not None:
+        if date.lower() == "all":
+            # Wyłącz filtrowanie — ustaw specjalny sentinel w crud
+            sessions = crud.get_course_sessions(db, course_id, filter_date="all")
+            return [_build_session_response(s) for s in sessions]
+        try:
+            filter_date = DateType.fromisoformat(date)
+        except ValueError:
+            from fastapi import HTTPException
+            raise HTTPException(
+                status_code=400,
+                detail="Niepoprawny format daty. Użyj YYYY-MM-DD lub 'all'."
+            )
+
+    sessions = crud.get_course_sessions(db, course_id, filter_date=filter_date)
     return [_build_session_response(s) for s in sessions]
 
 
