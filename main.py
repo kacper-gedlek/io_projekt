@@ -388,17 +388,6 @@ def root():
     }
 
 
-@app.get("/debug-config")
-def debug_config():
-    return {
-        "MOODLE_API_URL": MOODLE_API_URL,
-        "has_api_key": bool(MOODLE_API_KEY),
-        "api_key_length": len(MOODLE_API_KEY) if MOODLE_API_KEY else 0,
-        "api_key_start": MOODLE_API_KEY[:6] if MOODLE_API_KEY else None,
-        "room_name": ROOM_NAME,
-        "selected_context": selected_context,
-        "teacher_auth": teacher_auth,
-    }
 
 
 @app.get("/api/panel")
@@ -720,16 +709,9 @@ def get_last_rfid():
 
 @app.post("/api/end-class")
 def end_class():
-    global selected_context, last_scan
+    global last_scan
 
-    selected_context = {
-        "lecturer_uid": None,
-        "lecturer_name": None,
-        "course_id": None,
-        "course": None,
-        "session_id": None,
-        "session": None,
-    }
+    clear_selected_context()
 
     last_scan = {
         "uid": None,
@@ -747,25 +729,6 @@ def end_class():
         "message": "Zajęcia zakończone. Sala wolna."
     }
 
-
-@app.get("/api/debug/user/{card_uid}")
-def debug_user(card_uid: str):
-    return check_user_by_card(card_uid)
-
-
-@app.get("/api/debug/courses/{card_uid}")
-def debug_courses_for_card(card_uid: str):
-    return get_lecturer_courses(card_uid)
-
-
-@app.get("/api/debug/courses/{course_id}/sessions")
-def debug_sessions(course_id: int):
-    return get_course_sessions(course_id)
-
-
-@app.post("/api/debug/attendance/{session_id}/{student_card_uid}")
-def debug_register_attendance(session_id: int, student_card_uid: str):
-    return register_attendance(session_id, student_card_uid)
 
 
 if __name__ == "__main__":

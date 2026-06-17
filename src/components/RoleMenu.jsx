@@ -54,7 +54,7 @@ export default function RoleMenu({
             const first = Number(a.sessdate || 0)
             const second = Number(b.sessdate || 0)
             return first - second
-  })
+          })
 
           setSessions(sortedSessions)
           setStep('select-session')
@@ -108,7 +108,7 @@ export default function RoleMenu({
         },
         body: JSON.stringify({
           course_id: session.course_id,
-          session_id: session.id
+          session_id: session.id || session.session_id
         })
       })
 
@@ -151,7 +151,7 @@ export default function RoleMenu({
 
               {sessions.map((session) => (
                 <button
-                  key={`${session.course_id}-${session.id}`}
+                  key={`${session.course_id}-${session.id || session.session_id}`}
                   type="button"
                   className="session-card"
                   onClick={() => pickSession(session)}

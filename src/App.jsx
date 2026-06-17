@@ -79,7 +79,7 @@ export default function App() {
         <div className="dashboard-layout">
           <LogoPanel />
           <TopControls dateTime={now.toISOString()} label={formatShortDate(now)} />
-          <LessonInfo data={data} mode="student" />
+          <LessonInfo data={data} />
           <CommunicationBox message={data.message} />
         </div>
       </section>
