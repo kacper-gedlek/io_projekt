@@ -1,9 +1,9 @@
 import os
 import time
 from datetime import datetime
+
 import requests
 import uvicorn
-
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +11,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
-MOODLE_API_URL = os.getenv("MOODLE_API_URL", "https://moodle.maruda-lab.org/moodle-api")
+MOODLE_API_URL = os.getenv(
+    "MOODLE_API_URL",
+    "https://moodle.maruda-lab.org/moodle-api"
+).strip().rstrip("/")
+
 MOODLE_API_KEY = os.getenv("MOODLE_API_KEY")
 ROOM_NAME = os.getenv("ROOM_NAME", "Aula 2.14")
 
@@ -79,16 +83,16 @@ def moodle_get(path: str):
 
     try:
         response = requests.get(url, headers=api_headers(), timeout=10)
-    except requests.RequestException as e:
+    except requests.RequestException as error:
         raise HTTPException(
             status_code=502,
-            detail=f"Nie udało się połączyć z Moodle API: {str(e)}"
+            detail=f"Nie udało się połączyć z Moodle API: {str(error)}",
         )
 
     if response.status_code >= 400:
         raise HTTPException(
             status_code=response.status_code,
-            detail=response.text
+            detail=response.text,
         )
 
     return response.json()
@@ -99,16 +103,16 @@ def moodle_post(path: str, payload: dict):
 
     try:
         response = requests.post(url, json=payload, headers=api_headers(), timeout=10)
-    except requests.RequestException as e:
+    except requests.RequestException as error:
         raise HTTPException(
             status_code=502,
-            detail=f"Nie udało się połączyć z Moodle API: {str(e)}"
+            detail=f"Nie udało się połączyć z Moodle API: {str(error)}",
         )
 
     if response.status_code >= 400:
         raise HTTPException(
             status_code=response.status_code,
-            detail=response.text
+            detail=response.text,
         )
 
     return response.json()
@@ -173,6 +177,7 @@ def build_session_option(course, session):
         "course_shortname": course.get("shortname", "-"),
     }
 
+
 def get_session_date(session):
     if not session:
         return None
@@ -191,11 +196,79 @@ def get_session_date(session):
 
     return None
 
+
+def get_session_start_datetime(session):
+    if not session:
+        return None
+
+    if session.get("date") and session.get("time_start"):
+        try:
+            return datetime.strptime(
+                f"{session['date']} {session['time_start']}",
+                "%Y-%m-%d %H:%M",
+            )
+        except Exception:
+            pass
+
+    if "sessdate" in session:
+        try:
+            return datetime.fromtimestamp(int(session["sessdate"]))
+        except Exception:
+            return None
+
+    return None
+
+
+def get_session_end_datetime(session):
+    if not session:
+        return None
+
+    if session.get("date") and session.get("time_end"):
+        try:
+            return datetime.strptime(
+                f"{session['date']} {session['time_end']}",
+                "%Y-%m-%d %H:%M",
+            )
+        except Exception:
+            pass
+
+    if "sessdate" in session and "duration" in session:
+        try:
+            start_ts = int(session["sessdate"])
+            end_ts = start_ts + int(session["duration"])
+            return datetime.fromtimestamp(end_ts)
+        except Exception:
+            return None
+
+    return None
+
+
+def is_session_before_now(session):
+    """
+    Zwraca True, jeśli sesja zakończyła się już względem lokalnego czasu.
+
+    Najpierw używa pól date + time_end, bo to są godziny widoczne w panelu.
+    Dopiero awaryjnie używa sessdate + duration.
+    """
+    if not session:
+        return False
+
+    end_datetime = get_session_end_datetime(session)
+
+    if end_datetime:
+        return datetime.now() > end_datetime
+
+    session_date = get_session_date(session)
+
+    if session_date:
+        return session_date < datetime.now().date()
+
+    return False
+
+
 def build_sessions_for_lecturer(card_uid: str):
     courses = get_lecturer_courses(card_uid)
     all_sessions = []
-
-    today = datetime.now().date()
 
     for course in courses:
         course_id = course.get("id")
@@ -209,14 +282,17 @@ def build_sessions_for_lecturer(card_uid: str):
             sessions = []
 
         for session in sessions:
-            session_date = get_session_date(session)
-
-            if session_date and session_date < today:
+            if is_session_before_now(session):
                 continue
 
             all_sessions.append(build_session_option(course, session))
 
     def session_sort_key(session):
+        start_datetime = get_session_start_datetime(session)
+
+        if start_datetime:
+            return start_datetime.timestamp()
+
         try:
             return int(session.get("sessdate", 0))
         except Exception:
@@ -278,40 +354,34 @@ def get_session_status(session):
     if not session:
         return "Brak aktywnych zajęć"
 
-    now = int(time.time())
+    start_datetime = get_session_start_datetime(session)
+    end_datetime = get_session_end_datetime(session)
 
-    if "sessdate" in session and "duration" in session:
-        try:
-            start_ts = int(session["sessdate"])
-            end_ts = start_ts + int(session["duration"])
+    if start_datetime and end_datetime:
+        now = datetime.now()
 
-            if start_ts <= now <= end_ts:
-                return "Zajęcia trwają"
+        if start_datetime <= now <= end_datetime:
+            return "Zajęcia trwają"
 
-            if now < start_ts:
-                return "Nadchodzące zajęcia"
+        if now < start_datetime:
+            return "Nadchodzące zajęcia"
 
-            return "Zajęcia zakończone"
-        except Exception:
-            pass
+        return "Zajęcia zakończone"
 
     return "Dane z Moodle API"
+
 
 def is_session_finished(session):
     if not session:
         return False
 
-    now = int(time.time())
+    end_datetime = get_session_end_datetime(session)
 
-    if "sessdate" in session and "duration" in session:
-        try:
-            start_ts = int(session["sessdate"])
-            end_ts = start_ts + int(session["duration"])
-            return now > end_ts
-        except Exception:
-            return False
+    if not end_datetime:
+        return False
 
-    return False
+    return datetime.now() > end_datetime
+
 
 def clear_selected_context():
     global selected_context
@@ -324,6 +394,7 @@ def clear_selected_context():
         "session_id": None,
         "session": None,
     }
+
 
 def has_active_class():
     return bool(selected_context.get("course") and selected_context.get("session"))
@@ -386,8 +457,6 @@ def root():
         "status": "Backend FastAPI działa",
         "source": "Moodle Mifare Integration API",
     }
-
-
 
 
 @app.get("/api/panel")
@@ -479,7 +548,7 @@ def select_teacher_session(payload: dict = Body(...)):
     if not lecturer_uid:
         raise HTTPException(
             status_code=400,
-            detail="Brak zalogowanego prowadzącego."
+            detail="Brak zalogowanego prowadzącego.",
         )
 
     courses = get_lecturer_courses(lecturer_uid)
@@ -499,8 +568,15 @@ def select_teacher_session(payload: dict = Body(...)):
     if not selected_course or not selected_session:
         raise HTTPException(
             status_code=404,
-            detail="Nie znaleziono wybranych zajęć."
+            detail="Nie znaleziono wybranych zajęć.",
         )
+
+    if is_session_before_now(selected_session):
+        raise HTTPException(
+            status_code=400,
+            detail="Wybrane zajęcia już się zakończyły.",
+        )
+
     try:
         lecturer_user = check_user_by_card(lecturer_uid)
         lecturer_name = get_user_full_name(lecturer_user) or "Prowadzący"
@@ -665,7 +741,7 @@ def scan_rfid(uid: str):
         if not session_id:
             raise HTTPException(
                 status_code=404,
-                detail="Nie znaleziono session_id dla zajęć."
+                detail="Nie znaleziono session_id dla zajęć.",
             )
 
         attendance_response = register_attendance(session_id, normalized_uid)
@@ -684,7 +760,7 @@ def scan_rfid(uid: str):
 
         return last_scan
 
-    except HTTPException as e:
+    except HTTPException as error:
         student_name = get_user_full_name(user)
 
         last_scan = {
@@ -696,7 +772,7 @@ def scan_rfid(uid: str):
             "attendance": None,
             "session_id": selected_context.get("session_id"),
             "course_id": selected_context.get("course_id"),
-            "error": e.detail,
+            "error": error.detail,
         }
 
         return last_scan
@@ -726,9 +802,8 @@ def end_class():
 
     return {
         "status": "ended",
-        "message": "Zajęcia zakończone. Sala wolna."
+        "message": "Zajęcia zakończone. Sala wolna.",
     }
-
 
 
 if __name__ == "__main__":
