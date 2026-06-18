@@ -24,7 +24,6 @@ nppBackup/
 # Special dirs and files
 installers/Windows/assets/
 build/
-dist/
 bin/
 *.egg-info/
 Thumbs.db
@@ -91,6 +90,8 @@ desktop.ini
 # Archives and environment configuration
 .env
 *.tar
+node_modules/
+node_modules/**
 *.tgz
 *.zip
 
